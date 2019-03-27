@@ -3,8 +3,10 @@
 import json
 import logging
 import os
+import sys
 
 import pypd
+from pypd.errors import Error as PdError
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO')
 logging.root.setLevel(logging.getLevelName(log_level))  # type: ignore
@@ -13,6 +15,21 @@ _logger = logging.getLogger(__name__)
 PD_INT_KEY = os.environ.get('PD_INT_KEY')
 PD_SEVERITY = os.environ.get('PD_SEVERITY')
 PD_SOURCE = os.environ.get('PD_SOURCE')
+
+class HandlerBaseError(Exception):
+    '''Base error class'''
+
+
+class PagerDutyBaseError(HandlerBaseError):
+    '''Base PagerDuty Error'''
+
+
+class PagerDutyApiError(PagerDutyBaseError):
+    '''PagerDuty Communication Error'''
+
+
+class PagerDutyDataEventValidationError(PagerDutyBaseError):
+    '''PagerDuty Event Data Validation Error'''
 
 
 def _get_message_from_event(event: dict) -> str:
@@ -25,17 +42,26 @@ def _publish_event_to_pagerduty(msg: str,
                                 severity: str = PD_SEVERITY,
                                 source: str = PD_SOURCE) -> dict:
     '''Publish a message to the PagerDuty API'''
-    r = pypd.EventV2.create(
-        data={
-            'routing_key': integration_key,
-            'event_action': 'trigger',
-            'payload': {
-                'summary': msg,
-                'severity': severity,
-                'source': source,
+    try:
+        r = pypd.EventV2.create(
+            data={
+                'routing_key': integration_key,
+                'event_action': 'trigger',
+                'payload': {
+                    'summary': msg,
+                    'severity': severity,
+                    'source': source,
+                }
             }
-        }
-    )
+        )
+    except PdError as e:
+        tb = sys.exc_info()[2]
+        raise PagerDutyApiError(e).with_traceback(tb)
+
+    except AssertionError as e:
+        tb = sys.exc_info()[2]
+        raise PagerDutyDataEventValidationError(e).with_traceback(tb)
+
     return r
 
 
