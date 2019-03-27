@@ -29,6 +29,10 @@ class PagerDutyApiError(PagerDutyBaseError):
     '''PagerDuty Communication Error'''
 
 
+class PagerDutyApiRetryableError(PagerDutyBaseError):
+    '''PagerDuty Communication Error (Retryable)'''
+
+
 class PagerDutyDataSeverityTypeError(PagerDutyBaseError):
     '''PagerDuty Severity Not Valid Type Error'''
 
@@ -68,6 +72,10 @@ def _publish_event_to_pagerduty(msg: str,
         )
     except PdError as e:
         tb = sys.exc_info()[2]
+        if hasattr(e, 'code'):
+            if e.code == 429 or e.code >= 500:
+                raise PagerDutyApiRetryableError(e).with_traceback(tb)
+
         raise PagerDutyApiError(e).with_traceback(tb)
 
     except AssertionError as e:
