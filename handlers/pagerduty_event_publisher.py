@@ -7,6 +7,7 @@ import sys
 
 import pypd
 from pypd.errors import Error as PdError
+from tenacity import retry, retry_if_exception_type, stop_after_delay, wait_exponential
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO')
 logging.root.setLevel(logging.getLevelName(log_level))  # type: ignore
@@ -52,7 +53,10 @@ def _get_message_from_event(event: dict) -> str:
     '''Get the message from the event'''
     return event.get('Records')[0].get('Sns').get('Message')
 
-
+@retry(wait=wait_exponential(),
+       stop=stop_after_delay(20),
+       retry=retry_if_exception_type(PagerDutyApiRetryableError),
+       reraise=True)
 def _publish_event_to_pagerduty(msg: str,
                                 integration_key: str = PD_INT_KEY,
                                 severity: str = PD_SEVERITY,
@@ -73,7 +77,7 @@ def _publish_event_to_pagerduty(msg: str,
     except PdError as e:
         tb = sys.exc_info()[2]
         if hasattr(e, 'code'):
-            if e.code == 429 or e.code >= 500:
+            if e.code == 400 or e.code >= 500:
                 raise PagerDutyApiRetryableError(e).with_traceback(tb)
 
         raise PagerDutyApiError(e).with_traceback(tb)
