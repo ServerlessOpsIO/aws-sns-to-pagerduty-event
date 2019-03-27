@@ -11,11 +11,6 @@ custom:
   log_level: "${env:LOG_LEVEL, 'INFO'}"
 
   parameters:
-    PagerDutyApiKey:
-      Type: String
-      Description: "PagerDuty API Key"
-      Default: "${env:PD_API_KEY}"
-
     PagerDutyIntegrationKey:
       Type: String
       Description: "PagerDuty Integration Key"
@@ -54,8 +49,6 @@ functions:
     memorySize: 128
     timeout: 60
     environment:
-      PD_API_KEY:
-        Ref: PagerDutyApiKey
       PD_INT_KEY:
         Ref: PagerDutyIntegrationKey
       PD_SEVERITY:

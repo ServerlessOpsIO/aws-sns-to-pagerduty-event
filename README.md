@@ -16,7 +16,6 @@ This service provides an SNS topic with a Lambda function as a subscriber. A mes
 
 The following Parameters are available.
 
-* __PagerDutyApiKey__: API Key for using the PagerDuty Events V2 API.
 * __PagerDutyIntegrationKey__: Integration key for the PagerDuty integration the event will be routed to.
 * __PagerDutySeverity__ (optional): Set the severity of the event. A default is provided.
 * __PagerDutySource__ (optional): Set the name of the source as show in PagerDuty. A default is provided.

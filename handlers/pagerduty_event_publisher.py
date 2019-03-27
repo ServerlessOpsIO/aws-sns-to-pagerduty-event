@@ -10,7 +10,6 @@ log_level = os.environ.get('LOG_LEVEL', 'INFO')
 logging.root.setLevel(logging.getLevelName(log_level))  # type: ignore
 _logger = logging.getLogger(__name__)
 
-pypd.api_key = os.environ.get('PD_API_KEY')
 PD_INT_KEY = os.environ.get('PD_INT_KEY')
 PD_SEVERITY = os.environ.get('PD_SEVERITY')
 PD_SOURCE = os.environ.get('PD_SOURCE')
