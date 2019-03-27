@@ -1,0 +1,94 @@
+# Publish events from SNS to PagerDuty
+service: aws-sns-to-pagerduty-event
+
+plugins:
+  - serverless-python-requirements
+  - serverless-parameters
+
+
+custom:
+  stage: "${opt:stage, env:SLS_STAGE, 'dev'}"
+  log_level: "${env:LOG_LEVEL, 'INFO'}"
+
+  parameters:
+    PagerDutyApiKey:
+      Type: String
+      Description: "PagerDuty API Key"
+      Default: "${env:PD_API_KEY}"
+
+    PagerDutyIntegrationKey:
+      Type: String
+      Description: "PagerDuty Integration Key"
+      Default: "${env:PD_INT_KEY}"
+
+    PagerDutySeverity:
+      Type: String
+      Description: "PagerDuty Event Severity"
+      Default: "${env:PD_SEVERITY, 'error'}"
+
+    PagerDutySource:
+      Type: String
+      Description: "PagerDuty Event Source"
+      Default: "${env:PD_SOURCE, '${self:service}'}"
+
+
+  pythonRequirements:
+    dockerizePip: false
+
+
+provider:
+  name: aws
+  stage: ${self:custom.stage}
+  runtime: python3.6
+  environment:
+    LOG_LEVEL: ${self:custom.log_level}
+  stackTags:
+    x-service: ${self:service}
+    x-stack: ${self:service}-${self:provider.stage}
+
+
+functions:
+  PagerDutyEventPublisher:
+    handler: handlers/pagerduty_event_publisher.handler
+    description: "Publish message from SNS to PagerDuty"
+    memorySize: 128
+    timeout: 60
+    environment:
+      PD_API_KEY:
+        Ref: PagerDutyApiKey
+      PD_INT_KEY:
+        Ref: PagerDutyIntegrationKey
+      PD_SEVERITY:
+        Ref: PagerDutySeverity
+      PD_SOURCE:
+        Ref: PagerDutySource
+    events:
+      - sns:
+          arn:
+            Ref: PagerDutyEventPublishTopic
+          topicName: PagerDutyEventPublishTopic
+
+
+resources:
+  Resources:
+    PagerDutyEventPublishTopic:
+      Type: "AWS::SNS::Topic"
+
+    PagerDutyEventPublishTopicArnSsmParam:
+      Type: AWS::SSM::Parameter
+      Properties:
+        # NOTE: SSM names can't start with AWS as our service name does.
+        Name: "/sns-to-pagerduty-event/${self:provider.stage}/PagerDutyEventPublishTopicArn"
+        Description: "ARN of SNS topic for publishing events to PagerDuty."
+        Type: String
+        Value:
+          Ref: PagerDutyEventPublishTopic
+
+  Outputs:
+    PagerDutyEventPublishTopicArnSsmParam:
+      Description: "Name of SSM parameter with SNS Topic ARN."
+      Value:
+        Ref: PagerDutyEventPublishTopicArnSsmParam
+      Export:
+        Name: ${self:service}-${self:custom.stage}-PagerDutyEventPublishTopicArnSsmParam
+

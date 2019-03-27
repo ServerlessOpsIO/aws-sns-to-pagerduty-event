@@ -1,0 +1,29 @@
+{
+  "StateChangeTime": "2019-03-22T23:31:26.475+0000",
+  "Region": "US East (N. Virginia)",
+  "OldStateValue": "OK",
+  "NewStateValue": "ALARM",
+  "NewStateReason": "Threshold Crossed: 1 datapoint [1.0 (22/03/19 23:30:00)] was greater than the threshold (0.0).",
+  "AlarmName": "serverlessops-test-alarm",
+  "AlarmDescription": "ServerlessOps Test Alarm",
+  "AWSAccountId": "000000000000",
+  "Trigger":  {
+    "Unit": null,
+    "TreatMissingData": "",
+    "Threshold": 0,
+    "StatisticType": "Statistic",
+    "Statistic": "MAXIMUM",
+    "Period": 60,
+    "Namespace": "ServerlessOps/Testing",
+    "MetricName": "TestMetric",
+    "EvaluationPeriods": 1,
+    "EvaluateLowSampleCountPercentile": "",
+    "Dimensions": [
+      {
+        "value": "Changed",
+        "name": "STATUS"
+      }
+    ],
+    "ComparisonOperator": "GreaterThanThreshold"
+  }
+}

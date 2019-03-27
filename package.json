@@ -1,0 +1,15 @@
+{
+  "name": "aws-sns-to-pagerduty-event",
+  "description": "",
+  "version": "0.1.0",
+  "dependencies": {
+    "serverless-parameters": "0.0.7"
+  },
+  "devDependencies": {
+    "serverless-parameters": "^0.0.7",
+    "serverless-python-requirements": "^4.0.3"
+  },
+  "scripts": {
+    "setup": "pyenv virtualenv 3.6 $(basename $(pwd)) && pyenv local $(basename $(pwd)) && pip install -r requirements.txt -r requirements-dev.txt"
+  }
+}
