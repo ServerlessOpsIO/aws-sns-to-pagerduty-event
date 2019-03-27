@@ -16,6 +16,7 @@ PD_INT_KEY = os.environ.get('PD_INT_KEY')
 PD_SEVERITY = os.environ.get('PD_SEVERITY')
 PD_SOURCE = os.environ.get('PD_SOURCE')
 
+
 class HandlerBaseError(Exception):
     '''Base error class'''
 
@@ -28,8 +29,19 @@ class PagerDutyApiError(PagerDutyBaseError):
     '''PagerDuty Communication Error'''
 
 
+class PagerDutyDataSeverityTypeError(PagerDutyBaseError):
+    '''PagerDuty Severity Not Valid Type Error'''
+
+
 class PagerDutyDataEventValidationError(PagerDutyBaseError):
     '''PagerDuty Event Data Validation Error'''
+
+
+PD_ALLOWED_SEVERITIES = pypd.EventV2.SEVERITY_TYPES
+if PD_SEVERITY not in PD_ALLOWED_SEVERITIES:
+    raise PagerDutyDataSeverityTypeError(
+        'Event source "{}" not in "{}"'.format(PD_SEVERITY, PD_ALLOWED_SEVERITIES)
+    )
 
 
 def _get_message_from_event(event: dict) -> str:
