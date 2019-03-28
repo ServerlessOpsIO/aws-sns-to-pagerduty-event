@@ -2,7 +2,6 @@
 service: aws-sns-to-pagerduty-event
 
 plugins:
-  - serverless-python-requirements
   - serverless-parameters
 
 
@@ -11,25 +10,10 @@ custom:
   log_level: "${env:LOG_LEVEL, 'INFO'}"
 
   parameters:
-    PagerDutyIntegrationKey:
+    PagerDutySnsSubscriberEndpoint:
       Type: String
-      Description: "PagerDuty Integration Key"
-      Default: "${env:PD_INT_KEY}"
-
-    PagerDutySeverity:
-      Type: String
-      Description: "PagerDuty Event Severity"
-      Default: "${env:PD_SEVERITY, 'error'}"
-
-    PagerDutySource:
-      Type: String
-      Description: "PagerDuty Event Source"
-      Default: "${env:PD_SOURCE, '${self:service}'}"
-
-
-  pythonRequirements:
-    dockerizePip: false
-
+      Description: "PagerDuty Integration SNS Subscription endpoint"
+      Default: "${env:SNS_ENDPOINT, ''}"
 
 provider:
   name: aws
@@ -42,30 +26,19 @@ provider:
     x-stack: ${self:service}-${self:provider.stage}
 
 
-functions:
-  PagerDutyEventPublisher:
-    handler: handlers/pagerduty_event_publisher.handler
-    description: "Publish message from SNS to PagerDuty"
-    memorySize: 128
-    timeout: 60
-    environment:
-      PD_INT_KEY:
-        Ref: PagerDutyIntegrationKey
-      PD_SEVERITY:
-        Ref: PagerDutySeverity
-      PD_SOURCE:
-        Ref: PagerDutySource
-    events:
-      - sns:
-          arn:
-            Ref: PagerDutyEventPublishTopic
-          topicName: PagerDutyEventPublishTopic
-
-
 resources:
   Resources:
     PagerDutyEventPublishTopic:
       Type: "AWS::SNS::Topic"
+
+    PagerDutyEventPublishSubscription:
+      Type: "AWS::SNS::Subscription"
+      Properties:
+        TopicArn:
+          Ref: PagerDutyEventPublishTopic
+        Protocol: https
+        Endpoint:
+          Ref: PagerDutySnsSubscriberEndpoint
 
     PagerDutyEventPublishTopicArnSsmParam:
       Type: AWS::SSM::Parameter

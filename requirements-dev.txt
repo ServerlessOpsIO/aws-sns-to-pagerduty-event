@@ -1,7 +1,0 @@
-flake8
-moto
-mypy
-pylint
-pytest
-pytest-pylint
-
